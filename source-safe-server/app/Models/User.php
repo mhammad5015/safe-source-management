@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -21,6 +22,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'isAdmin'
     ];
 
     /**
@@ -42,4 +44,55 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
+
+
+    /**
+     * Get all of the groupMembers for the User
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function groupMembers(): HasMany
+    {
+        return $this->hasMany(GroupMember::class, 'user_id');
+    }
+
+    /**
+     * Get all of the groups for the User
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function groups(): HasMany
+    {
+        return $this->hasMany(Group::class, 'owner_id');
+    }
+
+    /**
+     * Get all of the files for the User
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function files(): HasMany
+    {
+        return $this->hasMany(File::class, 'user_id');
+    }
+
+    /**
+     * Get all of the createdRequests for the User
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function createdRequests(): HasMany
+    {
+        return $this->hasMany(RequestApproval::class, 'user_id');
+    }
+
+    /**
+     * Get all of the adminRequests for the User
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function adminRequests(): HasMany
+    {
+        return $this->hasMany(RequestApproval::class, 'owner_id');
+    }
 }
