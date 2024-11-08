@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\api\AdminController;
 use App\Http\Controllers\api\AuthController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -20,3 +21,5 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
+
+Route::middleware(['auth:sanctum', 'isAdmin'])->get('/getAllUsers', [AdminController::class, 'getAllUsers']);
