@@ -13,9 +13,9 @@ return new class extends Migration
     {
         Schema::create('request_approvals', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('file_id')->constrained('files');
-            $table->foreignId('user_id')->constrained('users');
-            $table->foreignId('owner_id')->constrained('users');
+            $table->foreignId('file_id')->constrained('files')->cascadeOnDelete();
+            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+            $table->foreignId('owner_id')->constrained('users')->cascadeOnDelete();
             $table->enum('status',['pending','approved','rejected'])->default('pending');
             $table->timestamps();
         });

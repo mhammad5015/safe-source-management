@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -57,11 +58,11 @@ class User extends Authenticatable
     }
 
     /**
-     * Get all of the groups for the User
+     * Get all of the ownedGroups for the User
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function groups(): HasMany
+    public function ownedGroups(): HasMany
     {
         return $this->hasMany(Group::class, 'owner_id');
     }
@@ -94,5 +95,15 @@ class User extends Authenticatable
     public function adminRequests(): HasMany
     {
         return $this->hasMany(RequestApproval::class, 'owner_id');
+    }
+
+    /**
+     * The groups that belong to the Group
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
+    public function groups(): BelongsToMany
+    {
+        return $this->belongsToMany(Group::class, 'group_members', 'user_id', 'group_id');
     }
 }

@@ -32,7 +32,7 @@ class DatabaseSeeder extends Seeder
                 'name' => 'muhammad1',
                 'email' => 'mh1@gmail.com',
                 'password' => Hash::make('1234567890'),
-                'isAdmin' => true,
+                'isAdmin' => false,
             ],
             [
                 'name' => 'muhammad2',
@@ -47,8 +47,8 @@ class DatabaseSeeder extends Seeder
                 'isAdmin' => false,
             ],
             [
-                'name' => 'muhammad3',
-                'email' => 'mh3@gmail.com',
+                'name' => 'muhammad4',
+                'email' => 'mh4gmail.com',
                 'password' => Hash::make('1234567890'),
                 'isAdmin' => false,
             ]

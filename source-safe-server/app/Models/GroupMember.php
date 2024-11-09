@@ -10,6 +10,8 @@ class GroupMember extends Model
     use HasFactory;
 
     protected $fillable = [
+        'user_id',
+        "group_id",
         'isOwner'
     ];
 }
