@@ -29,14 +29,26 @@ class DatabaseSeeder extends Seeder
                 'isAdmin' => true,
             ],
             [
-                'name' => 'ali',
-                'email' => 'ali@gmail.com',
+                'name' => 'muhammad1',
+                'email' => 'mh1@gmail.com',
                 'password' => Hash::make('1234567890'),
-                'isAdmin' => true,
+                'isAdmin' => false,
             ],
             [
-                'name' => 'lena',
-                'email' => 'le@gmail.com',
+                'name' => 'muhammad2',
+                'email' => 'mh2@gmail.com',
+                'password' => Hash::make('1234567890'),
+                'isAdmin' => false,
+            ],
+            [
+                'name' => 'muhammad3',
+                'email' => 'mh3@gmail.com',
+                'password' => Hash::make('1234567890'),
+                'isAdmin' => false,
+            ],
+            [
+                'name' => 'muhammad4',
+                'email' => 'mh4gmail.com',
                 'password' => Hash::make('1234567890'),
                 'isAdmin' => false,
             ]

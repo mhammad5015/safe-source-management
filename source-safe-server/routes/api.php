@@ -2,6 +2,9 @@
 
 use App\Http\Controllers\api\AdminController;
 use App\Http\Controllers\api\AuthController;
+use App\Http\Controllers\api\FileController;
+use App\Http\Controllers\api\GroupController;
+use App\Models\Group;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -19,7 +22,22 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
-Route::post('/register', [AuthController::class, 'register']);
+
+// Authentication
+Route::post('/user/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
-Route::middleware(['auth:sanctum', 'isAdmin'])->get('/getAllUsers', [AdminController::class, 'getAllUsers']);
+// Users
+Route::middleware(['auth:sanctum', 'isAdmin'])->get('/admin/getAllUsers', [AdminController::class, 'getAllUsers']);
+
+// Groups
+Route::middleware(['auth:sanctum', 'isUser'])->prefix("/user")->group(function () {
+    Route::post('/group/createGroup', [GroupController::class, 'createGroup']);
+    Route::post('/group/addGroupMembers/{group_id}', [GroupController::class, 'addGroupMembers']);
+    Route::get('/group/getAllUserGroups', [GroupController::class, 'getAllUserGroups']);
+});
+Route::middleware(['auth:sanctum', 'isAdmin'])->prefix('/admin')->group(function () {
+    Route::get('/group/getAllGroups', [GroupController::class, 'getAllGroups']);
+    Route::get('/group/getAllUserGroupsById/{user_id}', [GroupController::class, 'getAllUserGroupsById']);
+    Route::delete('/group/deleteGroup/{group_id}', [GroupController::class, 'deleteGroup']);
+});
