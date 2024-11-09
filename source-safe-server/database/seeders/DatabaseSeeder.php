@@ -48,7 +48,7 @@ class DatabaseSeeder extends Seeder
             ],
             [
                 'name' => 'muhammad4',
-                'email' => 'mh4gmail.com',
+                'email' => 'mh4@gmail.com',
                 'password' => Hash::make('1234567890'),
                 'isAdmin' => false,
             ]

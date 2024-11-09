@@ -4,6 +4,7 @@ use App\Http\Controllers\api\AdminController;
 use App\Http\Controllers\api\AuthController;
 use App\Http\Controllers\api\FileController;
 use App\Http\Controllers\api\GroupController;
+use App\Http\Middleware\auth\authorization\isOwner;
 use App\Models\Group;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -33,7 +34,7 @@ Route::middleware(['auth:sanctum', 'isAdmin'])->get('/admin/getAllUsers', [Admin
 // Groups
 Route::middleware(['auth:sanctum', 'isUser'])->prefix("/user")->group(function () {
     Route::post('/group/createGroup', [GroupController::class, 'createGroup']);
-    Route::post('/group/addGroupMembers/{group_id}', [GroupController::class, 'addGroupMembers']);
+    Route::post('/group/addGroupMembers/{group_id}', [GroupController::class, 'addGroupMembers'])->middleware("isOwner");
     Route::get('/group/getAllUserGroups', [GroupController::class, 'getAllUserGroups']);
 });
 Route::middleware(['auth:sanctum', 'isAdmin'])->prefix('/admin')->group(function () {
