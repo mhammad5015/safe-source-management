@@ -42,3 +42,13 @@ Route::middleware(['auth:sanctum', 'isAdmin'])->prefix('/admin')->group(function
     Route::get('/group/getAllUserGroupsById/{user_id}', [GroupController::class, 'getAllUserGroupsById']);
     Route::delete('/group/deleteGroup/{group_id}', [GroupController::class, 'deleteGroup']);
 });
+
+// Files
+Route::middleware(['auth:sanctum', 'isUser'])->prefix('/user')->group(function (){
+    Route::get('/user/getUserFiles', [FileController::class, 'getUserFiles']);
+    Route::get('/user/getAllGroupFiles', [FileController::class, 'getAllGroupFiles'])->middleware('isGroupMember');
+});
+Route::middleware(['auth:sanctum', 'isAdmin'])->prefix('/user')->group(function (){
+    Route::get('/user', [FileController::class, 'getAllFiles']);
+    Route::get('/user/getUserFilesById/{user_id}', [FileController::class, 'getUserFilesById']);
+});
