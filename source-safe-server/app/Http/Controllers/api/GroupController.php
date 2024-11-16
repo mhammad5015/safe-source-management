@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Group;
 use App\Models\GroupMember;
 use App\Models\User;
+use App\Services\GroupService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -13,23 +14,19 @@ use function PHPUnit\Framework\isEmpty;
 
 class GroupController extends Controller
 {
-    //
+    protected $groupService;
+    public function __construct(GroupService $groupService)
+    {
+        $this->groupService = $groupService;
+    }
+
     public function createGroup(Request $request)
     {
         $validator = $request->validate([
             'groupName' => 'required',
             'groupImage' => 'required|image|mimes:jpeg,png,gif,bmp,jpg,svg',
         ]);
-        $user_id = auth()->user()->id;
-        $input = $request->all();
-        $input['groupImage'] = 'storage/' . $input['groupImage']->store('groupImages', 'public');
-        $input['owner_id'] = $user_id;
-        $group = Group::create($input);
-        $groupMember = GroupMember::create([
-            'user_id' => $user_id,
-            'group_id' => $group->id,
-            'isOwner' => true,
-        ]);
+        $group = $this->groupService->create($request->all());
         return response()->json([
             'status' => true,
             'message' => 'Group created successfully',
@@ -42,72 +39,19 @@ class GroupController extends Controller
         $validator = $request->validate([
             'emails' => 'required|array',
         ]);
-        return DB::transaction(function () use ($request, $group_id) {
-            $notFoundMembers = [];
-            $foundMembers = [];
-            $alreadyExists = [];
-            foreach ($request->emails as $email) {
-                $member = User::where('email', $email)->first();
-                if (!$member) {
-                    array_push($notFoundMembers, $email);
-                } else {
-                    $isGroupMember = GroupMember::where('group_id', $group_id)->where('user_id', $member->id)->first();
-                    if ($isGroupMember) {
-                        array_push($alreadyExists, $email);
-                        continue;
-                    }
-                    array_push($foundMembers, $email);
-                    $groupMember = GroupMember::create(attributes: [
-                        'user_id' => $member->id,
-                        'group_id' => $group_id,
-                        'isOwner' => false,
-                    ]);
-                }
-            }
-            if (count($notFoundMembers) === count($request->emails)) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'all the emails you entered are not found',
-                    'notFoundMembers' => $notFoundMembers,
-                ]);
-            }
-            if (count($alreadyExists) === count($request->emails)) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'all the emails you entered are already exists',
-                    'alreadyExists' => $alreadyExists,
-                ]);
-            } else {
-                return response()->json([
-                    'status' => true,
-                    'message' => 'Users added successfully to the group',
-                    'addedMembers' => $foundMembers,
-                    'notFoundMembers' => $notFoundMembers,
-                    'alreadyExists' => $alreadyExists,
-                ]);
-            }
-        });
+        $resault = $this->groupService->addGroupMember($request->all(), $group_id);
+        return response()->json($resault);
     }
 
     public function getAllUserGroupsById($user_id)
     {
-        $user = User::find($user_id);
-        if (!$user) {
-            return response()->json([
-                'status' => true,
-                'message' => 'user not found',
-            ]);
-        }
-        $userGroups = $user->groups;
-        return response()->json([
-            'status' => true,
-            'data' => $userGroups,
-        ]);
+        $resault = $this->groupService->getAllUserGroups($user_id);
+        return response()->json($resault);
     }
 
     public function getAllUserGroups()
     {
-        $user = auth()->user()->load('groups');
+        $user = auth()->user()->load(relations: 'groups');
         return response()->json([
             'status' => true,
             'data' => $user->groups,
