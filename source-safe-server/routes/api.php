@@ -49,7 +49,9 @@ Route::middleware(['auth:sanctum', 'isAdmin'])->prefix('/admin')->group(function
 
 // Files
 Route::middleware(['auth:sanctum', 'isUser', 'isNotBlocked'])->prefix('/user')->group(function () {
-    Route::post('/group/uploadNewFile/{group_id}', [FileController::class, 'uploadNewFile']);
+    Route::post('/group/uploadNewFile/{group_id}', [FileController::class, 'uploadNewFile'])->middleware('isGroupMember');
+    Route::put('/group/{group_id}/file/check_in/{file_id}', [FileController::class, 'check_in'])->middleware('isGroupMember');
+    Route::post('/group/{group_id}/file/check_out/{file_id}', [FileController::class, 'check_out'])->middleware('isGroupMember');
     Route::get('/getOwnerRequests/{group_id}', [FileController::class, 'getOwnerRequests'])->middleware("isOwner");
     Route::get('/getUserFiles', [FileController::class, 'getUserFiles']);
 });
