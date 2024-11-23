@@ -24,11 +24,7 @@ class GroupService
             }
             $data['owner_id'] = auth()->user()->id;
             $group = $this->groupRepository->createGroup($data);
-            $groupMember = $this->groupRepository->addGroupMember([
-                'user_id' => $data['owner_id'],
-                'group_id' => $group->id,
-                'isOwner' => true,
-            ]);
+            $groupMember = $this->groupRepository->addGroupMember($data['owner_id'], $group->id, true);
             return $group;
         });
     }
@@ -50,11 +46,7 @@ class GroupService
                         continue;
                     }
                     array_push($foundMembers, $email);
-                    $groupMember = $this->groupRepository->addGroupMember([
-                        'user_id' => $member->id,
-                        'group_id' => $group_id,
-                        'isOwner' => false,
-                    ]);
+                    $groupMember = $this->groupRepository->addGroupMember($member->id, $group_id, false);
                 }
             }
             if (count($notFoundMembers) === count($data['emails'])) {
