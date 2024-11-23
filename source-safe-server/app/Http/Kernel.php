@@ -4,6 +4,7 @@ namespace App\Http;
 
 use App\Http\Middleware\auth\authorization\isNotBlocked;
 use App\Http\Middleware\auth\authorization\isGroupMember;
+use App\Http\Middleware\auth\authorization\isgroupMemberOrAdmin;
 use App\Http\Middleware\auth\authorization\isOwner;
 use App\Http\Middleware\auth\isAdmin;
 use App\Http\Middleware\auth\isUser;
@@ -74,5 +75,6 @@ class Kernel extends HttpKernel
         'isOwner' => isOwner::class,
         'isGroupMember' => isGroupMember::class,
         'isNotBlocked' => isNotBlocked::class,
+        'isgroupMemberOrAdmin' => isgroupMemberOrAdmin::class,
     ];
 }
