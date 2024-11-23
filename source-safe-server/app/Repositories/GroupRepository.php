@@ -13,8 +13,16 @@ class GroupRepository implements GroupRepositoryInterface
     {
         return Group::create($data);
     }
-    public function addGroupMember(array $data)
+    // public function addGroupMember(array $data)
+    // {
+    //     return GroupMember::create($data);
+    // }
+    public function addGroupMember($user_id, $group_id, $isAdmin)
     {
-        return GroupMember::create($data);
+        return GroupMember::create([
+            'user_id' => $user_id,
+            'group_id' => $group_id,
+            'isOwner' => $isAdmin,
+        ]);
     }
 }
