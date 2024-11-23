@@ -26,14 +26,12 @@ class isgroupMemberOrAdmin
         $group = GroupMember::where('group_id', $request->route('group_id'))
             ->where('user_id', $user->id)
             ->first();
-
-        if ($group) {
-            return $next($request);
+        if (!$group) {
+            return response()->json([
+                'status' => false,
+                'message' => 'group not found',
+            ], 403);
         }
-
-        return response()->json([
-            'status' => false,
-            'message' => 'Not authorized',
-        ], 403);
+        return $next($request);
     }
 }

@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('fileName');
             $table->text('filePath');
             $table->boolean('isAvailable')->default(true);
+            $table->boolean('approved')->default(false);
             $table->timestamps();
         });
     }

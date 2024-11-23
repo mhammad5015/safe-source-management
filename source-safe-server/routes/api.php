@@ -29,7 +29,7 @@ Route::post('/login', [AuthController::class, 'login']);
 // Users
 Route::middleware(['auth:sanctum', 'isAdmin'])->prefix('/admin')->group(function () {
     Route::get('/getAllUsers', [UserController::class, 'getAllUsers']);
-    Route::post('/blockUser/{user_id}', [UserController::class, 'blockUser']);
+    Route::put('/blockUser/{user_id}', [UserController::class, 'blockUser']);
 });
 Route::middleware(['auth:sanctum', 'isgroupMemberOrAdmin'])->get('/getAllGroupUsers/{group_id}', [UserController::class, 'getAllGroupUsers']);
 
@@ -49,10 +49,12 @@ Route::middleware(['auth:sanctum', 'isAdmin'])->prefix('/admin')->group(function
 
 // Files
 Route::middleware(['auth:sanctum', 'isUser', 'isNotBlocked'])->prefix('/user')->group(function () {
-    Route::get('/user/getUserFiles', [FileController::class, 'getUserFiles']);
-    Route::get('/user/getAllGroupFiles', [FileController::class, 'getAllGroupFiles'])->middleware('isGroupMember');
+    Route::post('/group/uploadNewFile/{group_id}', [FileController::class, 'uploadNewFile']);
+    Route::get('/getOwnerRequests/{group_id}', [FileController::class, 'getOwnerRequests'])->middleware("isOwner");
+    Route::get('/getUserFiles', [FileController::class, 'getUserFiles']);
 });
-Route::middleware(['auth:sanctum', 'isAdmin'])->prefix('/user')->group(function () {
-    Route::get('/user', [FileController::class, 'getAllFiles']);
-    Route::get('/user/getUserFilesById/{user_id}', [FileController::class, 'getUserFilesById']);
+Route::get('/user/getGroupFiles/{group_id}', [FileController::class, 'getGroupFiles'])->middleware(['auth:sanctum', 'isgroupMemberOrAdmin', 'isNotBlocked']);
+Route::middleware(['auth:sanctum', 'isAdmin'])->prefix('/admin')->group(function () {
+    Route::get('/getAllFiles', [FileController::class, 'getAllFiles']);
+    Route::get('/getUserFilesById/{user_id}', [FileController::class, 'getUserFilesById']);
 });
