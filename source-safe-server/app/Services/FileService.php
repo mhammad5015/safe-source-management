@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Storage;
 class FileService
 {
     protected $fileRepository;
-    
+
 
     public function __construct(FileRepositoryInterface $fileRepository)
     {
@@ -134,11 +134,22 @@ class FileService
                 ];
             }
             if ($file->isAvailable == false) {
+                $uploadedFile = $request->filePath;
+                $uploadedFileName = $uploadedFile->getClientOriginalName();
+                $reservedFileName = pathinfo($file->filePath, PATHINFO_BASENAME);
+
+                if ($uploadedFileName !== $reservedFileName) {
+                    return [
+                        'status' => false,
+                        'message' => 'The uploaded file must have the same name and extension as the reserved file',
+                        'statusCode' => 400
+                    ];
+                }
+
                 $file->isAvailable = true;
                 $this->deleteExistingFile($file->filePath);
 
-                $uniqueFilename = $this->generateUniqueFilename($file->group_id, $request->filePath);
-                $file->filePath = 'storage/' . $request->filePath->storeAs('files', $uniqueFilename, 'public');
+                $file->filePath = 'storage/' . $request->filePath->store('files', 'public');
                 $file->save();
                 DB::commit();
                 return [
@@ -206,8 +217,7 @@ class FileService
     {
         $data['user_id'] = auth()->id();
         $data['group_id'] = $group_id;
-        $uniqueFilename = $this->generateUniqueFilename($group_id, $data['filePath']);
-        $data['filePath'] = 'storage/' . $data['filePath']->storeAs('files', $uniqueFilename, 'public');
+        $data['filePath'] = 'storage/' . $data['filePath']->store('files', 'public');
         return $data;
     }
 
