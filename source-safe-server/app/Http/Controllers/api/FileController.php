@@ -24,6 +24,7 @@ class FileController extends Controller
         $this->fileService = $fileService;
     }
 
+
     public function uploadNewFile(Request $request, $group_id)
     {
         $validation = $request->validate([
@@ -31,94 +32,32 @@ class FileController extends Controller
             'filePath' => 'required|file|mimes:doc,docx,xls,xlsx',
         ]);
         $response = $this->fileService->uploadNewFile($request->all(), group_id: $group_id);
-        return response()->json($response);
+        return response()->json($response, $response['statusCode']);
     }
+
 
     public function check_in($group_id, $file_id)
     {
-        $user = auth()->user();
-        $file = File::find($file_id);
-        if (!$file) {
-            return response()->json([
-                'status' => false,
-                'message' => 'file not found',
-            ]);
-        }
-        if ($file->group_id !== $group_id) {
-            return response()->json([
-                'status' => false,
-                'message' => 'You are not authorized to perform this action',
-            ], 403);
-        }
-        if ($file->isAvailable == false && $file->user_id == $user->id) {
-            return response()->json([
-                'status' => true,
-                'message' => 'you have already downloaded the file',
-                'data' => $file,
-            ]);
-        }
-        if ($file->isAvailable == true) {
-            $file->isAvailable = false;
-            $file->save();
-            return response()->json([
-                'status' => true,
-                'data' => $file,
-            ]);
-        } else {
-            return response()->json([
-                'status' => false,
-                'message' => 'the file is not free to edit',
-            ]);
-        }
+        $response = $this->fileService->check_in($group_id, $file_id);
+        return response()->json($response, $response['statusCode']);
     }
+
+
+    public function check_in_rollback($group_id, $file_id)
+    {
+        $response = $this->fileService->check_in_rollback($group_id, $file_id);
+        return response()->json($response, $response['statusCode']);
+    }
+
     public function check_out(Request $request, $group_id, $file_id)
     {
         $validator = $request->validate([
             'filePath' => 'required|file|mimes:doc,docx,xls,xlsx',
         ]);
-        DB::beginTransaction();
-        try {
-            $file = File::find($file_id);
-            if (!$file) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'file not found',
-                ]);
-            }
-            if ($file->group_id != $group_id) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'You are not authorized to perform this action',
-                ], 403);
-            }
-            if ($file->isAvailable == false) {
-                $file->isAvailable = true;
-                $relativePath = str_replace('storage/', '', $file->filePath);
-                if (Storage::disk('public')->exists($relativePath)) {
-                    Storage::disk('public')->delete($relativePath);
-                }
-                $uniqueFilename = $file->group_id . '_' . time() . '_' . $request->filePath->getClientOriginalName();
-                $file->filePath = 'storage/' . $request->filePath->storeAs('files', $uniqueFilename, 'public');
-                $file->save();
-                DB::commit();
-                return response()->json([
-                    'status' => true,
-                    'data' => $file,
-                ]);
-            } else {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'you cannot check_out, you have already checked out',
-                ]);
-            }
-        } catch (Exception $ex) {
-            DB::rollBack();
-            return response()->json([
-                'status' => false,
-                'message' => $ex->getMessage(),
-            ], 500);
-        }
+        $response = $this->fileService->check_out($request, $group_id, $file_id);
+        return response()->json($response, $response['statusCode']);
     }
+
 
     public function getOwnerRequests($group_id)
     {
@@ -130,6 +69,16 @@ class FileController extends Controller
             'status' => true,
             'data' => $reqs
         ]);
+    }
+
+
+    public function processRequest(Request $request, $group_id, $req_id)
+    {
+        $validate = $request->validate([
+            'status' => 'required|in:approved,rejected'
+        ]);
+        $response = $this->fileService->processRequest($request, $req_id);
+        return response()->json($response, $response['statusCode']);
     }
 
 
@@ -149,6 +98,7 @@ class FileController extends Controller
         ]);
     }
 
+
     public function getUserFiles()
     {
         $user = auth()->user();
@@ -157,6 +107,8 @@ class FileController extends Controller
             'data' => $user->files
         ]);
     }
+
+
     public function getUserFilesById($user_id)
     {
         $user = User::find($user_id);
@@ -171,6 +123,7 @@ class FileController extends Controller
             'data' => $user->files
         ]);
     }
+
 
     public function getAllFiles()
     {
