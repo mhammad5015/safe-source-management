@@ -24,6 +24,7 @@ use Illuminate\Support\Facades\Route;
 // Authentication
 Route::post('/user/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
+Route::get('/logout', [AuthController::class, 'logout'])->middleware(['auth:sanctum']);
 
 
 // Users
@@ -51,8 +52,10 @@ Route::middleware(['auth:sanctum', 'isAdmin'])->prefix('/admin')->group(function
 Route::middleware(['auth:sanctum', 'isUser', 'isNotBlocked'])->prefix('/user')->group(function () {
     Route::post('/group/uploadNewFile/{group_id}', [FileController::class, 'uploadNewFile'])->middleware('isGroupMember');
     Route::put('/group/{group_id}/file/check_in/{file_id}', [FileController::class, 'check_in'])->middleware('isGroupMember');
+    Route::put('/group/{group_id}/file/check_in_rollback/{file_id}', [FileController::class, 'check_in_rollback'])->middleware('isGroupMember');
     Route::post('/group/{group_id}/file/check_out/{file_id}', [FileController::class, 'check_out'])->middleware('isGroupMember');
     Route::get('/getOwnerRequests/{group_id}', [FileController::class, 'getOwnerRequests'])->middleware("isOwner");
+    Route::put('/group/{group_id}/processRequest/{req_id}', [FileController::class, 'processRequest'])->middleware("isOwner");
     Route::get('/getUserFiles', [FileController::class, 'getUserFiles']);
 });
 Route::get('/user/getGroupFiles/{group_id}', [FileController::class, 'getGroupFiles'])->middleware(['auth:sanctum', 'isgroupMemberOrAdmin', 'isNotBlocked']);
