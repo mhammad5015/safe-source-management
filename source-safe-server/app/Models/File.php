@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class File extends Model
 {
@@ -14,6 +15,7 @@ class File extends Model
     protected $fillable = [
         'fileName',
         'filePath',
+        'originalName',
         'isAvailable',
         'user_id',
         'group_id',
@@ -37,5 +39,15 @@ class File extends Model
     public function group(): BelongsTo
     {
         return $this->belongsTo(Group::class, 'group_id');
+    }
+
+    /**
+     * Get the fileLog associated with the File
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne
+     */
+    public function fileLog(): HasOne
+    {
+        return $this->hasOne(FileLog::class, 'file_id');
     }
 }
