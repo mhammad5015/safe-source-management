@@ -52,9 +52,9 @@ Route::middleware(['auth:sanctum', 'isAdmin'])->prefix('/admin')->group(function
 // Files
 Route::middleware(['auth:sanctum', 'isUser', 'isNotBlocked'])->prefix('/user')->group(function () {
     Route::post('/group/{group_id}/uploadNewFile', [FileController::class, 'uploadNewFile'])->middleware('isGroupMember');
-    Route::put('/group/{group_id}/file/check_in/{file_id}', [FileController::class, 'check_in'])->middleware('isGroupMember');
-    Route::put('/group/{group_id}/file/check_in_rollback/{file_id}', [FileController::class, 'check_in_rollback'])->middleware('isGroupMember');
-    Route::post('/group/{group_id}/file/check_out/{file_id}', [FileController::class, 'check_out'])->middleware('isGroupMember');
+    Route::put('/group/{group_id}/file/{file_id}/check_in', [FileController::class, 'check_in'])->middleware('isGroupMember');
+    Route::put('/group/{group_id}/file/{file_id}/check_in_rollback', [FileController::class, 'check_in_rollback'])->middleware('isGroupMember');
+    Route::post('/group/{group_id}/file/{file_id}/check_out', [FileController::class, 'check_out'])->middleware('isGroupMember');
     Route::get('/getOwnerRequests/{group_id}', [FileController::class, 'getOwnerRequests'])->middleware("isOwner");
     Route::put('/group/{group_id}/processRequest/{req_id}', [FileController::class, 'processRequest'])->middleware("isOwner");
     Route::get('/getUserFiles', [FileController::class, 'getUserFiles']);
