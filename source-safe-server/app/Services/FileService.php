@@ -19,7 +19,6 @@ class FileService
 {
     protected $fileRepository;
 
-
     public function __construct(FileRepositoryInterface $fileRepository)
     {
         $this->fileRepository = $fileRepository;
@@ -61,7 +60,6 @@ class FileService
             $file->isAvailable = false;
             $file->user_id = $user->id;
             $file->save();
-            // FileLoggerService::logForFile($file->id, "$user->name check-in", ['user_id' => $user->id, 'timestamp' => now()]);
             event(new FileActionEvent($file->id, "$user->name checked_in", $user->id));
             return [
                 'status' => true,
@@ -144,12 +142,9 @@ class FileService
             }
             if ($file->isAvailable == false) {
                 $uploadedFileName = $request->filePath->getClientOriginalName();
-                // $reservedFileName = pathinfo($file->filePath, PATHINFO_BASENAME);
                 $reservedFileName = $file->originalName;
-
                 if ($uploadedFileName !== $reservedFileName) {
                     return [
-                        // 's' => $reservedFileName,
                         'status' => false,
                         'message' => 'The uploaded file must have the same name and extension as the reserved file',
                         'statusCode' => 400
@@ -158,9 +153,9 @@ class FileService
 
                 $file->isAvailable = true;
                 $this->deleteExistingFile($file->filePath);
-
                 $file->filePath = 'storage/' . $request->filePath->store('files', 'public');
                 $file->save();
+
                 event(new FileActionEvent($file->id, "$user->name checked_out", $user->id));
                 DB::commit();
                 return [
@@ -200,20 +195,15 @@ class FileService
 
             $reqApproval->status = $request->status;
             $reqApproval->save();
-            // $log = null;
             if ($request->status == 'approved') {
                 File::where('id', $reqApproval->file_id)->update(['approved' => true]);
                 $user = User::find(id: $reqApproval->user_id);
-                // FileLoggerService::logForFile($reqApproval->file_id, "$user created file", [
-                //     'user_id' => $user->id,
-                //     'timestamp' => now(),
-                // ]);
                 event(new FileActionEvent($reqApproval->id, "$user->name created the file", $user->id));
             } else {
                 File::where('id', $reqApproval->file_id)->update(['approved' => false]);
             }
-            DB::commit();
 
+            DB::commit();
             return [
                 'status' => true,
                 'message' => "request has been $request->status successfully",
@@ -248,10 +238,6 @@ class FileService
         $data['approved'] = true;
         $file = $this->fileRepository->createFile($data);
         $user = auth()->user();
-        // FileLoggerService::logForFile($file->id, "$user->name created the file", [
-        //     'user_id' => $user->id,
-        //     'timestamp' => now(),
-        // ]);
         event(new FileActionEvent($file->id, "$user->name created the file", $user->id));
         return [
             'status' => true,
@@ -283,24 +269,4 @@ class FileService
             Storage::disk('public')->delete($relativePath);
         }
     }
-
-    private function generateUniqueFilename($file_id)
-    {
-        $randomString = bin2hex(random_bytes(4));
-        return time() . '_' . $randomString . '_' . 'file' . $file_id;
-    }
-
-    // private function createLogFile($file_id)
-    // {
-    //     $uniqueName = $this->generateUniqueFilename($file_id);
-
-    //     $relativeLogPath = 'logs/files/' . $uniqueName . '.log';
-
-    //     Storage::disk('public')->put($relativeLogPath, '');
-
-    //     return FileLog::create([
-    //         'file_id' => $file_id,
-    //         'logPath' => $relativeLogPath,
-    //     ]);
-    // }
 }
