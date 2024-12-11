@@ -4,6 +4,7 @@ use App\Http\Controllers\api\AdminController;
 use App\Http\Controllers\api\AuthController;
 use App\Http\Controllers\api\FileController;
 use App\Http\Controllers\api\GroupController;
+use App\Http\Controllers\api\LogController;
 use App\Http\Controllers\api\UserController;
 use App\Http\Middleware\auth\authorization\isOwner;
 use App\Models\Group;
@@ -62,4 +63,11 @@ Route::get('/user/getGroupFiles/{group_id}', [FileController::class, 'getGroupFi
 Route::middleware(['auth:sanctum', 'isAdmin'])->prefix('/admin')->group(function () {
     Route::get('/getAllFiles', [FileController::class, 'getAllFiles']);
     Route::get('/getUserFilesById/{user_id}', [FileController::class, 'getUserFilesById']);
+});
+
+
+// Logs
+Route::middleware(['auth:sanctum', 'isNotBlocked'])->group(function () {
+    Route::get('/file/{file_id}/getFileLog', [LogController::class, 'getFileLog']);
+    Route::get('/file/getAllFileLogs', [LogController::class, 'getAllFileLogs'])->middleware('isAdmin');
 });
