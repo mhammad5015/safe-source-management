@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Events\FileActionEvent;
+use App\Events\UserActionEvent;
 use App\Interfaces\FileRepositoryInterface;
 use App\Models\File;
 use App\Models\FileLog;
@@ -10,6 +11,7 @@ use App\Models\Group;
 use App\Models\RequestApproval;
 use App\Models\User;
 use App\Services\logging\FileLoggerService;
+use App\Services\logging\UserLoggerService;
 use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -25,6 +27,7 @@ class FileService
     }
 
 
+
     public function uploadNewFile(array $data, $group_id)
     {
         $group = Group::find($group_id);
@@ -36,6 +39,7 @@ class FileService
             ? $this->handleOwnerUpload($data)
             : $this->handleMemberUpload($data, $group);
     }
+
 
 
     public function check_in($group_id, $file_id)
@@ -61,6 +65,7 @@ class FileService
             $file->user_id = $user->id;
             $file->save();
             event(new FileActionEvent($file->id, "$user->name checked_in", $user->id));
+            event(new UserActionEvent($user->id, $group_id, "$user->name checked_in on file $file->id ($file->originalName)"));
             return [
                 'status' => true,
                 'data' => $file,
@@ -74,6 +79,7 @@ class FileService
             ];
         }
     }
+
 
 
     public function check_in_rollback($group_id, $file_id)
@@ -104,6 +110,7 @@ class FileService
         $file->isAvailable = true;
         $file->save();
         event(new FileActionEvent($file->id, "$user->name canceled the check_in", $user->id));
+        event(new UserActionEvent($user->id, $group_id, "$user->name canceled the check_in on file $file->id ($file->originalName)"));
         return [
             'status' => true,
             'message' => 'the check in canceled successfully',
@@ -111,6 +118,7 @@ class FileService
             'statusCode' => 200
         ];
     }
+
 
 
     public function check_out($request, $group_id, $file_id)
@@ -157,6 +165,7 @@ class FileService
                 $file->save();
 
                 event(new FileActionEvent($file->id, "$user->name checked_out", $user->id));
+                event(new UserActionEvent($user->id, $group_id, "$user->name checked_out from file $file->id ($file->originalName)"));
                 DB::commit();
                 return [
                     'status' => true,
@@ -181,6 +190,7 @@ class FileService
     }
 
 
+
     public function processRequest($request, $req_id)
     {
         DB::beginTransaction();
@@ -196,9 +206,12 @@ class FileService
             $reqApproval->status = $request->status;
             $reqApproval->save();
             if ($request->status == 'approved') {
-                File::where('id', $reqApproval->file_id)->update(['approved' => true]);
+                $file = File::where('id', $reqApproval->file_id)->first();
+                $file->approved = true;
+                $file->save();
                 $user = User::find(id: $reqApproval->user_id);
-                event(new FileActionEvent($reqApproval->id, "$user->name created the file", $user->id));
+                event(new FileActionEvent($reqApproval->file_id, "$user->name created the file", $user->id));
+                event(new UserActionEvent($user->id, $file->group_id, "$user->name created the file $file->id ($file->originalName)"));
             } else {
                 File::where('id', $reqApproval->file_id)->update(['approved' => false]);
             }
@@ -207,7 +220,6 @@ class FileService
             return [
                 'status' => true,
                 'message' => "request has been $request->status successfully",
-                // 'log' => $log,
                 'statusCode' => 200,
             ];
         } catch (Exception $e) {
@@ -239,6 +251,7 @@ class FileService
         $file = $this->fileRepository->createFile($data);
         $user = auth()->user();
         event(new FileActionEvent($file->id, "$user->name created the file", $user->id));
+        event(new UserActionEvent($user->id, $file->group_id, "$user->name created the file $file->id ($file->originalName)"));
         return [
             'status' => true,
             'message' => 'File created successfully',

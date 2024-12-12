@@ -69,5 +69,8 @@ Route::middleware(['auth:sanctum', 'isAdmin'])->prefix('/admin')->group(function
 // Logs
 Route::middleware(['auth:sanctum', 'isNotBlocked'])->group(function () {
     Route::get('/file/{file_id}/getFileLog', [LogController::class, 'getFileLog']);
-    Route::get('/file/getAllFileLogs', [LogController::class, 'getAllFileLogs'])->middleware('isAdmin');
+    Route::get('/file/getAllFilesLogs', [LogController::class, 'getAllFilesLogs'])->middleware('isAdmin');
+
+    Route::get('/user/{user_id}/group/{group_id}/getUserLog', [LogController::class, 'getUserLog'])->middleware('isOwner');
+    Route::get('/users/logs/getAllUsersLogs', [LogController::class, 'getAllUsersLogs'])->middleware('isAdmin');
 });
