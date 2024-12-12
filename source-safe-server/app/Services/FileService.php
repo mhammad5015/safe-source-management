@@ -2,18 +2,22 @@
 
 namespace App\Services;
 
+use App\Events\FileActionEvent;
 use App\Interfaces\FileRepositoryInterface;
 use App\Models\File;
+use App\Models\FileLog;
 use App\Models\Group;
 use App\Models\RequestApproval;
+use App\Models\User;
+use App\Services\logging\FileLoggerService;
 use Exception;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class FileService
 {
     protected $fileRepository;
-    
 
     public function __construct(FileRepositoryInterface $fileRepository)
     {
@@ -56,6 +60,7 @@ class FileService
             $file->isAvailable = false;
             $file->user_id = $user->id;
             $file->save();
+            event(new FileActionEvent($file->id, "$user->name checked_in", $user->id));
             return [
                 'status' => true,
                 'data' => $file,
@@ -98,6 +103,7 @@ class FileService
         }
         $file->isAvailable = true;
         $file->save();
+        event(new FileActionEvent($file->id, "$user->name canceled the check_in", $user->id));
         return [
             'status' => true,
             'message' => 'the check in canceled successfully',
@@ -112,6 +118,7 @@ class FileService
         DB::beginTransaction();
         try {
             $file = $this->fileRepository->getFile($file_id);
+            $user = auth()->user();
             if (!$file) {
                 return [
                     'status' => false,
@@ -126,7 +133,7 @@ class FileService
                     'statusCode' => 401
                 ];
             }
-            if ($file->user_id != auth()->user()->id) {
+            if ($file->user_id != $user->id) {
                 return [
                     'status' => false,
                     'message' => 'You are not authorized to perform this action, not checker',
@@ -134,12 +141,22 @@ class FileService
                 ];
             }
             if ($file->isAvailable == false) {
+                $uploadedFileName = $request->filePath->getClientOriginalName();
+                $reservedFileName = $file->originalName;
+                if ($uploadedFileName !== $reservedFileName) {
+                    return [
+                        'status' => false,
+                        'message' => 'The uploaded file must have the same name and extension as the reserved file',
+                        'statusCode' => 400
+                    ];
+                }
+
                 $file->isAvailable = true;
                 $this->deleteExistingFile($file->filePath);
-
-                $uniqueFilename = $this->generateUniqueFilename($file->group_id, $request->filePath);
-                $file->filePath = 'storage/' . $request->filePath->storeAs('files', $uniqueFilename, 'public');
+                $file->filePath = 'storage/' . $request->filePath->store('files', 'public');
                 $file->save();
+
+                event(new FileActionEvent($file->id, "$user->name checked_out", $user->id));
                 DB::commit();
                 return [
                     'status' => true,
@@ -178,14 +195,19 @@ class FileService
 
             $reqApproval->status = $request->status;
             $reqApproval->save();
-
-            $request->status == 'approved' ?
-                File::where('id', $reqApproval->file_id)->update(['approved' => true]) :
+            if ($request->status == 'approved') {
+                File::where('id', $reqApproval->file_id)->update(['approved' => true]);
+                $user = User::find(id: $reqApproval->user_id);
+                event(new FileActionEvent($reqApproval->id, "$user->name created the file", $user->id));
+            } else {
                 File::where('id', $reqApproval->file_id)->update(['approved' => false]);
+            }
+
             DB::commit();
             return [
                 'status' => true,
                 'message' => "request has been $request->status successfully",
+                // 'log' => $log,
                 'statusCode' => 200,
             ];
         } catch (Exception $e) {
@@ -206,8 +228,8 @@ class FileService
     {
         $data['user_id'] = auth()->id();
         $data['group_id'] = $group_id;
-        $uniqueFilename = $this->generateUniqueFilename($group_id, $data['filePath']);
-        $data['filePath'] = 'storage/' . $data['filePath']->storeAs('files', $uniqueFilename, 'public');
+        $data['originalName'] = $data['filePath']->getClientOriginalName();
+        $data['filePath'] = 'storage/' . $data['filePath']->store('files', 'public');
         return $data;
     }
 
@@ -215,6 +237,8 @@ class FileService
     {
         $data['approved'] = true;
         $file = $this->fileRepository->createFile($data);
+        $user = auth()->user();
+        event(new FileActionEvent($file->id, "$user->name created the file", $user->id));
         return [
             'status' => true,
             'message' => 'File created successfully',
@@ -244,10 +268,5 @@ class FileService
         if (Storage::disk('public')->exists($relativePath)) {
             Storage::disk('public')->delete($relativePath);
         }
-    }
-
-    private function generateUniqueFilename($group_id, $file)
-    {
-        return $group_id . '_' . time() . '_' . $file->getClientOriginalName();
     }
 }

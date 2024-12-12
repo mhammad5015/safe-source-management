@@ -4,6 +4,7 @@ use App\Http\Controllers\api\AdminController;
 use App\Http\Controllers\api\AuthController;
 use App\Http\Controllers\api\FileController;
 use App\Http\Controllers\api\GroupController;
+use App\Http\Controllers\api\LogController;
 use App\Http\Controllers\api\UserController;
 use App\Http\Middleware\auth\authorization\isOwner;
 use App\Models\Group;
@@ -38,7 +39,7 @@ Route::middleware(['auth:sanctum', 'isgroupMemberOrAdmin'])->get('/getAllGroupUs
 // Groups
 Route::middleware(['auth:sanctum', 'isUser', 'isNotBlocked'])->prefix("/user")->group(function () {
     Route::post('/group/createGroup', [GroupController::class, 'createGroup']);
-    Route::post('/group/addGroupMembers/{group_id}', [GroupController::class, 'addGroupMembers'])->middleware("isOwner");
+    Route::post('/group/{group_id}/addGroupMembers', [GroupController::class, 'addGroupMembers'])->middleware("isOwner");
     Route::get('/group/getAllUserGroups', [GroupController::class, 'getAllUserGroups']);
 });
 Route::middleware(['auth:sanctum', 'isAdmin'])->prefix('/admin')->group(function () {
@@ -50,7 +51,7 @@ Route::middleware(['auth:sanctum', 'isAdmin'])->prefix('/admin')->group(function
 
 // Files
 Route::middleware(['auth:sanctum', 'isUser', 'isNotBlocked'])->prefix('/user')->group(function () {
-    Route::post('/group/uploadNewFile/{group_id}', [FileController::class, 'uploadNewFile'])->middleware('isGroupMember');
+    Route::post('/group/{group_id}/uploadNewFile', [FileController::class, 'uploadNewFile'])->middleware('isGroupMember');
     Route::put('/group/{group_id}/file/check_in/{file_id}', [FileController::class, 'check_in'])->middleware('isGroupMember');
     Route::put('/group/{group_id}/file/check_in_rollback/{file_id}', [FileController::class, 'check_in_rollback'])->middleware('isGroupMember');
     Route::post('/group/{group_id}/file/check_out/{file_id}', [FileController::class, 'check_out'])->middleware('isGroupMember');
@@ -62,4 +63,11 @@ Route::get('/user/getGroupFiles/{group_id}', [FileController::class, 'getGroupFi
 Route::middleware(['auth:sanctum', 'isAdmin'])->prefix('/admin')->group(function () {
     Route::get('/getAllFiles', [FileController::class, 'getAllFiles']);
     Route::get('/getUserFilesById/{user_id}', [FileController::class, 'getUserFilesById']);
+});
+
+
+// Logs
+Route::middleware(['auth:sanctum', 'isNotBlocked'])->group(function () {
+    Route::get('/file/{file_id}/getFileLog', [LogController::class, 'getFileLog']);
+    Route::get('/file/getAllFileLogs', [LogController::class, 'getAllFileLogs'])->middleware('isAdmin');
 });
