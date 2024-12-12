@@ -129,7 +129,12 @@ return [
 
         'file' => [
             'driver' => 'single',
-            'path' => storage_path('logs/filse.log'),
+            'path' => storage_path('logs/files/file.log'),
+            'level' => 'debug',
+        ],
+        'user' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/users/user.log'),
             'level' => 'debug',
         ]
     ],

@@ -13,10 +13,10 @@ class FileLoggerService
         if ($fileLog) {
             $logPath = public_path($fileLog->logPath);
         } else {
-            $logPath = public_path("storage/logs/files/{$file_id}.log");
+            $logPath = public_path("storage/logs/files/file$file_id.log");
             FileLog::create([
                 'file_id' => $file_id,
-                'logPath' => 'storage/logs/files/' . $file_id . '.log',
+                'logPath' => 'storage/logs/files/file' . $file_id . '.log',
             ]);
         }
 

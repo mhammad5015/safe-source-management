@@ -3,8 +3,10 @@
 namespace App\Providers;
 
 use App\Events\FileActionEvent;
+use App\Events\UserActionEvent;
 use App\Listeners\FileActionListener;
 use App\Listeners\FileActionListner;
+use App\Listeners\UserActionListener;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
@@ -24,6 +26,9 @@ class EventServiceProvider extends ServiceProvider
         FileActionEvent::class => [
             FileActionListner::class,
         ],
+        UserActionEvent::class => [
+            UserActionListener::class,
+        ]
     ];
 
     /**
