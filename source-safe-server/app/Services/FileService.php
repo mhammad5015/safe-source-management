@@ -155,7 +155,7 @@ class FileService
                     return [
                         'status' => false,
                         'message' => 'The uploaded file must have the same name and extension as the reserved file',
-                        'statusCode' => 400
+                        'statusCode' => 200
                     ];
                 }
 
