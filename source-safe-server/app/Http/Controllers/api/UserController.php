@@ -39,4 +39,10 @@ class UserController extends Controller
         $response = $this->userService->blockUser($user_id);
         return response()->json($response);
     }
+
+    public function search(Request $request)
+    {
+        $response = $this->userService->searchForUser($request->search);
+        return response()->json($response, $response['statusCode']);
+    }
 }

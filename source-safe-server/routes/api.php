@@ -34,6 +34,7 @@ Route::middleware(['auth:sanctum', 'isAdmin'])->prefix('/admin')->group(function
     Route::put('/blockUser/{user_id}', [UserController::class, 'blockUser']);
 });
 Route::middleware(['auth:sanctum', 'isgroupMemberOrAdmin'])->get('/getAllGroupUsers/{group_id}', [UserController::class, 'getAllGroupUsers']);
+Route::middleware(['auth:sanctum'])->get('/user/search', [UserController::class, 'search']);
 
 
 // Groups

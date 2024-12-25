@@ -53,4 +53,50 @@ class UserService
             ];
         }
     }
+
+    public function searchForUser($search)
+    {
+        if ($search) {
+            // Search for users by name or email
+            $users = User::where('name', 'like', '%' . $search . '%')
+                ->orWhere('email', 'like', '%' . $search . '%')
+                ->get(['id', 'name', 'email']);
+
+            // Check if any users were found
+            if ($users->isNotEmpty()) {
+                return [
+                    'data' => ['users' => $users],
+                    'statusCode' => 200,
+                ];
+            }
+        }
+
+        // Return a 422 response if no users are found
+        return [
+            'message' => 'No users found with the provided name or email.',
+            'data' => [],
+            'statusCode' => 422,
+        ];
+        // $user = User::query();
+        // if ($search) {
+        //     if ($user->where('email', 'like', '%' . $search . '%')->exists() && $user->where('name', 'like', '%' . $search . '%')->exists()) {
+        //         return response()->json([
+        //             'data' => ['users' => $user->get(['id', 'name'])]
+        //         ]);
+        //     } else if ($user->where('email', 'like', '%' . $search . '%')->exists()) {
+        //         return response()->json([
+        //             'data' => ['users' => [], 'consults' => $user->get()]
+        //         ]);
+        //     } else if ($user->where('name', 'like', '%' . $search . '%')->exists()) {
+        //         return response()->json([
+        //             'data' => ['users' => $user->get(['id', 'name'])]
+        //         ]);
+        //     }
+        // }
+
+        // return response()->json([
+        //     'message' => 'There Is No Expert or user With This Name',
+        //     'data' => []
+        // ], 422);
+    }
 }
