@@ -233,6 +233,31 @@ class FileService
     }
 
 
+    public function deleteFile($file_id)
+    {
+        try {
+            DB::beginTransaction();
+            $file = File::find($file_id);
+            if (!$file) {
+                return [
+                    'status' => false,
+                    'message' => "File not found",
+                    'statusCode' => 400
+                ];
+            }
+            $file->delete();
+            $this->deleteExistingFile($file->filePath);
+            DB::commit();
+            return [
+                'status' => true,
+                'message' => "File deleted successfully",
+                'statusCode' => 200
+            ];
+        } catch (Exception $e) {
+            DB::rollBack();
+        }
+    }
+
     // ****************************************************************
     // HELPER FUNCTIONS
     // ****************************************************************

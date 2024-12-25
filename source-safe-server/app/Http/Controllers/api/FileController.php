@@ -61,13 +61,12 @@ class FileController extends Controller
 
     public function getOwnerRequests($group_id)
     {
-        $reqs = RequestApproval::where('owner_id', auth()->user()->id)->get();
-        $reqs->map(function ($req) {
-            return $req->file->group;
-        });
+        $requests = RequestApproval::where('owner_id', auth()->user()->id)
+            ->with(['file.group', 'user']) // Eager load the related file, group, and user
+            ->get();
         return response()->json([
             'status' => true,
-            'data' => $reqs
+            'data' => $requests,
         ]);
     }
 
@@ -132,5 +131,11 @@ class FileController extends Controller
             'status' => true,
             'data' => $files
         ]);
+    }
+
+    public function deleteFile($group_id, $file_id)
+    {
+        $response = $this->fileService->deleteFile($file_id);
+        return response()->json($response, $response['statusCode']);
     }
 }
