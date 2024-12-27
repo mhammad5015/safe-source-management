@@ -12,31 +12,21 @@
     <link href="https://fonts.bunny.net/css?family=figtree:400,600&display=swap" rel="stylesheet" />
 
     <!-- scripts -->
+    @php
+    $PUSHER_APP_KEY = env('PUSHER_APP_KEY');
+    @endphp
     <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
     <script>
-        // // Enable Pusher logging for development (disable in production)
-        // Pusher.logToConsole = true;
-        // // Initialize Pusher
-        // var pusher = new Pusher('24b84ba7291470020271', {
-        //     cluster: 'eu'
-        // });
-        // // Subscribe to the private channel
-        // var channel = pusher.subscribe('group.1');
-        // // Bind to the event
-        // channel.bind('SendNotification', function(data) {
-        //     console.log('Notification received:', data);
-        //     alert(`File "${data.file.fileName}" was checked in.`);
-        // });
-        // Enable pusher logging - don't include this in production
         Pusher.logToConsole = true;
 
-        var pusher = new Pusher('24b84ba7291470020271', {
+        var pusher = new Pusher("{{$PUSHER_APP_KEY}}", {
             cluster: 'eu'
         });
 
-        var channel = pusher.subscribe('my-channel');
-        channel.bind('my-event', function(data) {
-            alert(JSON.stringify(data));
+        var channel = pusher.subscribe('group.' + "1");
+        channel.bind('SendNotification', function(data) {
+            // console.log(data);
+            alert(JSON.stringify(data.message));
         });
     </script>
 </head>
