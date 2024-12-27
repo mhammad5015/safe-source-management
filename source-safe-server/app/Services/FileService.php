@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Events\FileActionEvent;
+use App\Events\SendNotification;
 use App\Events\UserActionEvent;
 use App\Interfaces\FileRepositoryInterface;
 use App\Models\File;
@@ -64,8 +65,11 @@ class FileService
             $file->isAvailable = false;
             $file->user_id = $user->id;
             $file->save();
+            // logging
             event(new FileActionEvent($file->id, "$user->name checked_in", $user->id));
             event(new UserActionEvent($user->id, $group_id, "$user->name checked_in on file $file->id ($file->originalName)"));
+            // notification
+            event(new SendNotification($file->fileName, "checked in", $user->name, $group_id));
             return [
                 'status' => true,
                 'data' => $file,
@@ -109,8 +113,11 @@ class FileService
         }
         $file->isAvailable = true;
         $file->save();
+        // logging
         event(new FileActionEvent($file->id, "$user->name canceled the check_in", $user->id));
         event(new UserActionEvent($user->id, $group_id, "$user->name canceled the check_in on file $file->id ($file->originalName)"));
+        // notification
+        event(new SendNotification($file->fileName, "rolled back", $user->name, $group_id));
         return [
             'status' => true,
             'message' => 'the check in canceled successfully',
@@ -164,8 +171,11 @@ class FileService
                 $file->filePath = 'storage/' . $request->filePath->store('files', 'public');
                 $file->save();
 
+                // logging
                 event(new FileActionEvent($file->id, "$user->name checked_out", $user->id));
                 event(new UserActionEvent($user->id, $group_id, "$user->name checked_out from file $file->id ($file->originalName)"));
+                // notification
+                event(new SendNotification($file->fileName, "checked out", $user->name, $group_id));
                 DB::commit();
                 return [
                     'status' => true,
@@ -210,8 +220,11 @@ class FileService
                 $file->approved = true;
                 $file->save();
                 $user = User::find(id: $reqApproval->user_id);
+                // logging
                 event(new FileActionEvent($reqApproval->file_id, "$user->name created the file", $user->id));
                 event(new UserActionEvent($user->id, $file->group_id, "$user->name created the file $file->id ($file->originalName)"));
+                // notification
+                event(new SendNotification($file->fileName, "created", $user->name, $file->group_id));
             } else {
                 File::where('id', $reqApproval->file_id)->update(['approved' => false]);
             }
@@ -275,8 +288,11 @@ class FileService
         $data['approved'] = true;
         $file = $this->fileRepository->createFile($data);
         $user = auth()->user();
+        // logging
         event(new FileActionEvent($file->id, "$user->name created the file", $user->id));
         event(new UserActionEvent($user->id, $file->group_id, "$user->name created the file $file->id ($file->originalName)"));
+        // notification
+        event(new SendNotification($file->fileName, "created", $user->name, $file->group_id));
         return [
             'status' => true,
             'message' => 'File created successfully',
