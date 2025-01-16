@@ -59,6 +59,7 @@ Route::middleware(['auth:sanctum', 'isUser', 'isNotBlocked'])->prefix('/user')->
     Route::get('/getOwnerRequests/{group_id}', [FileController::class, 'getOwnerRequests'])->middleware("isOwner");
     Route::put('/group/{group_id}/processRequest/{req_id}', [FileController::class, 'processRequest'])->middleware("isOwner");
     Route::get('/getUserFiles', [FileController::class, 'getUserFiles']);
+    Route::get('/group/{group_id}/file/{file_id}/getFileVersions', [FileController::class, 'getFileVersions'])->middleware("isGroupMember");
 });
 Route::get('/user/getGroupFiles/{group_id}', [FileController::class, 'getGroupFiles'])->middleware(['auth:sanctum', 'isgroupMemberOrAdmin', 'isNotBlocked']);
 Route::delete('/user/group/{group_id}/deleteFile/{file_id}', [FileController::class, 'deleteFile'])->middleware(['auth:sanctum', 'isOwner', 'isNotBlocked']);

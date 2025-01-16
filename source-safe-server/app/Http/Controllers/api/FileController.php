@@ -4,6 +4,7 @@ namespace App\Http\Controllers\api;
 
 use App\Http\Controllers\Controller;
 use App\Models\File;
+use App\Models\FileBackup;
 use App\Models\Group;
 use App\Models\RequestApproval;
 use App\Models\User;
@@ -137,5 +138,20 @@ class FileController extends Controller
     {
         $response = $this->fileService->deleteFile($file_id);
         return response()->json($response, $response['statusCode']);
+    }
+
+    public function getFileVersions($group_id, $file_id)
+    {
+        $files = FileBackup::where("file_id", $file_id)->get();
+        if ($files->isEmpty()) {
+            return response()->json([
+                "status" => false,
+                "message" => "File not found, No versions found for this file"
+            ]);
+        }
+        return response()->json([
+            "status" => true,
+            "data" => $files
+        ]);
     }
 }

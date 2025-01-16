@@ -3,9 +3,11 @@
 namespace App\Providers;
 
 use App\Events\FileActionEvent;
+use App\Events\FileBackupEvent;
 use App\Events\UserActionEvent;
 use App\Listeners\FileActionListener;
 use App\Listeners\FileActionListner;
+use App\Listeners\FileBackupListener;
 use App\Listeners\UserActionListener;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
@@ -28,7 +30,10 @@ class EventServiceProvider extends ServiceProvider
         ],
         UserActionEvent::class => [
             UserActionListener::class,
-        ]
+        ],
+        FileBackupEvent::class => [
+            FileBackupListener::class,
+        ],
     ];
 
     /**

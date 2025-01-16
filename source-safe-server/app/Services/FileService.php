@@ -3,19 +3,16 @@
 namespace App\Services;
 
 use App\Events\FileActionEvent;
+use App\Events\FileBackupEvent;
 use App\Events\SendNotification;
 use App\Events\UserActionEvent;
 use App\Interfaces\FileRepositoryInterface;
 use App\Models\File;
-use App\Models\FileLog;
 use App\Models\Group;
 use App\Models\RequestApproval;
 use App\Models\User;
-use App\Services\logging\FileLoggerService;
-use App\Services\logging\UserLoggerService;
 use Exception;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class FileService
@@ -176,6 +173,8 @@ class FileService
                 event(new UserActionEvent($user->id, $group_id, "$user->name checked_out from file $file->id ($file->originalName)"));
                 // notification
                 event(new SendNotification($file->fileName, "checked out", $user->name, $group_id));
+                // backup
+                event(new FileBackupEvent($file->id));
                 DB::commit();
                 return [
                     'status' => true,
@@ -225,6 +224,8 @@ class FileService
                 event(new UserActionEvent($user->id, $file->group_id, "$user->name created the file $file->id ($file->originalName)"));
                 // notification
                 event(new SendNotification($file->fileName, "created", $user->name, $file->group_id));
+                // backup
+                event(new FileBackupEvent($file->id));
             } else {
                 File::where('id', $reqApproval->file_id)->update(['approved' => false]);
             }
@@ -285,20 +286,28 @@ class FileService
 
     private function handleOwnerUpload($data)
     {
-        $data['approved'] = true;
-        $file = $this->fileRepository->createFile($data);
-        $user = auth()->user();
-        // logging
-        event(new FileActionEvent($file->id, "$user->name created the file", $user->id));
-        event(new UserActionEvent($user->id, $file->group_id, "$user->name created the file $file->id ($file->originalName)"));
-        // notification
-        event(new SendNotification($file->fileName, "created", $user->name, $file->group_id));
-        return [
-            'status' => true,
-            'message' => 'File created successfully',
-            'data' => $file,
-            'statusCode' => 200
-        ];
+        try {
+            DB::beginTransaction();
+            $data['approved'] = true;
+            $file = $this->fileRepository->createFile($data);
+            $user = auth()->user();
+            // logging
+            event(new FileActionEvent($file->id, "$user->name created the file", $user->id));
+            event(new UserActionEvent($user->id, $file->group_id, "$user->name created the file $file->id ($file->originalName)"));
+            // notification
+            event(new SendNotification($file->fileName, "created", $user->name, $file->group_id));
+            event(new FileBackupEvent($file->id));
+            DB::commit();
+            return [
+                'status' => true,
+                'message' => 'File created successfully',
+                'data' => $file,
+                'statusCode' => 200
+            ];
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            throw $th;
+        }
     }
 
     private function handleMemberUpload($data, $group)
